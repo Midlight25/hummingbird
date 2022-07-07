@@ -5,11 +5,15 @@
   "description": "A full-stack web application for analyzing machine learning data and identifying unique entities in that data.",
   "source": "index.html",
   "scripts": {
+    "fire-all-engines": "npm run build && npm run emulators",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "emulators": "firebase emulators:start",
+    "emulators:dev": "firebase emulators:start --only auth,functions,firestore,pubsub,storage",
     "check": "tsc --noEmit",
-    "lint": "eslint --ext js,ts,jsx,tsx src"
+    "lint": "eslint --ext js,ts,jsx,tsx src",
+    "lint:fix": "eslint --ext js,ts,jsx,tsx src --fix"
   },
   "repository": {
     "type": "git",
