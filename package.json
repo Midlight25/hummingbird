@@ -7,7 +7,7 @@
   "scripts": {
     "fire-all-engines": "npm run build && npm run emulators",
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build --dev",
     "preview": "vite preview",
     "emulators": "firebase emulators:start",
     "emulators:dev": "firebase emulators:start --only auth,functions,firestore,pubsub,storage",
