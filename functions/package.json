@@ -8,6 +8,8 @@
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
+    "check": "tsc --noEmit && npm run lint",
+    "fix": "eslint --ext .js,.ts src --fix",
     "logs": "firebase functions:log"
   },
   "engines": {
