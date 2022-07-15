@@ -1,5 +1,15 @@
 # Hummingbird
 
+## Badges
+
+### Main (Stable)
+
+[![Node CI](https://github.com/Midlight25/hummingbird/actions/workflows/project-ci.yml/badge.svg?branch=main&event=push)](https://github.com/Midlight25/hummingbird/actions/workflows/project-ci.yml)
+
+### Development (Beta)
+
+[![Node CI](https://github.com/Midlight25/hummingbird/actions/workflows/project-ci.yml/badge.svg?branch=develop&event=push)](https://github.com/Midlight25/hummingbird/actions/workflows/project-ci.yml)
+
 ## Description
 
 A full-stack web application for analyzing machine learning data and identifying unique entities in that data. What does that look like? We don't know yet.
