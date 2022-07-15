@@ -14,8 +14,13 @@
             "jsx": true
         },
         "ecmaVersion": "latest",
-        "sourceType": "module"
+        "sourceType": "module",
+        "project": "./tsconfig.json"
     },
+    "ignorePatterns": [
+        "/lib/**/*", // Ignore built files.
+        "/dist/**/*" // Ignore built files.
+    ],
     "plugins": [
         "react",
         "@typescript-eslint"
@@ -43,5 +48,10 @@
                 "tsx": "never"
             }
         ]
+    },
+    "settings": {
+        "react": {
+            "version": "detect"
+        }
     }
 }
