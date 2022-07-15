@@ -1,9 +1,9 @@
 name: "Node CI"
 on:
   push:
-    branches: [main, dev]
+    branches: [main, develop]
   pull_request:
-    branches: [main, dev]
+    branches: [main, develop]
 jobs:
   test_code_submission:
     runs-on: ubuntu-latest
