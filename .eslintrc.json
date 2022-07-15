@@ -19,7 +19,8 @@
     },
     "ignorePatterns": [
         "/lib/**/*", // Ignore built files.
-        "/dist/**/*" // Ignore built files.
+        "/dist/**/*", // Ignore built files.
+        "/functions/**/*" // Ignore cloud functions since it has it's own eslint setup.
     ],
     "plugins": [
         "react",
