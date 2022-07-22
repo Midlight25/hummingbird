@@ -1,6 +1,6 @@
 // Firebase Cloud Functions Index File
 // Author: Midlight25 (Michael Mesquita)
 
-import {healthCheck} from "./health";
+import {healthCheckFunction} from "./health";
 
-export const healthCheckFunction = healthCheck;
+export const health = healthCheckFunction;
