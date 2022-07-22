@@ -127,183 +127,220 @@ Please note, this may take a long time if you are running these commands for the
 
 ### Building
 
-Suppose you need to build this project.
-
 #### Build Webapp
-
-If you need to build the webapp for your local machine
 
 ```shell
 npm run build
 ```
 
-If you need to build the webapp for production, either to deploy or for E2E testing. **PROVIDED YOU HAVE A `.env.production` FILE ON YOUR MACHINE.** Vite will build the webapp for production, meaning *production access keys will be embeded into your built artifacts and the code that makes the webapp access the emulators will be disabled.* Be extremely sure that you need to run this command: even if production-artifacts are run locally on your system and the emulators are running, **they will still access our production resources online.**
+Builds your webapp for your local environment. Build artifacts are saved to `dist/`.
+
+#### Build Production Webapp
 
 ```shell
 npm run build:prod
 ```
 
-#### Build Cloud Functions
+Builds the webapp for production, embedding API and Firebase access keys. Build artifacts are saved to `dist/`.
 
-If you need to build the artifacts for the Cloud Functions.
+If you need to build the webapp for production, either to deploy or for E2E testing. **PROVIDED YOU HAVE A `.env.production` FILE ON YOUR MACHINE.** Vite will build the webapp for production, meaning *production access keys will be embeded into your built artifacts and the code that makes the webapp access the emulators will be disabled.* Be extremely sure that you need to run this command: even if production-artifacts are run locally on your system and the emulators are running, **they will still access our production resources online.**
+
+#### Build Cloud Functions
 
 ```shell
 npm run functions:build
 ```
 
+Builds the Cloud Functions for you for use with the Cloud Functions Emulator or for deployment. Build artifacts are saved into `functions/lib`.
+
 There is no option for building functions for production since the Cloud Function artifacts do not currently require production access keys or configs. However, this could change in the future.
 
 #### Build Everything
-
-If you need to build both the Webapp and the Cloud Functions at the same time, a script has been provided for your convinence.
 
 ```shell
 npm run all:build
 ```
 
-This build process is not performed concurrently. This could change in the future. If you need to build the entire product for production (maybe you're deploying it), you may run this script.
+Builds both Webapp and Cloud Functions into `dist/` and `functions/lib`. This build process is not performed concurrently. This could change in the future.
+
+#### Build Everything For Production
 
 ```shell
 npm run all:build:prod
 ```
 
+Builds both Webapp and Cloud Functions for production. Build artifacts are saved to `dist/` and `functions/lib` respectively. Same warnings from [Build Production Webapp](#build-production-webapp) apply
+
 ### Local Development
 
-These scripts are related to running the app in your local environment.
-
-#### Webapp
-
-To start up the dev server, which gives you automatic building of your webapp and hot reloading:
+#### Start Dev Server
 
 ```shell
 npm run dev
 ```
 
-To start up the firebase emulators for local development, sans the hosting emulator since the Vite Dev Server is the one technically hosting the Webapp in this instance:
+Starts up the Vite Dev Server, which will build your webapp and serve it. If it detects changes to the Webapp's source code, the application will be recompiled and reloaded in your browser window automatically.
+
+#### Start Local Emulators
 
 ```shell
 npm run dev:emulators
 ```
 
-If you want to start the full suite of firebase emulators, including the hosting emulator, run:
+Starts up local Firebase emulators for development, except the Hosting Emulator since the Vite Dev Server is hosting the webapp locally with hot-reloading.
+
+#### Start Full Firebase Emulators Suite
 
 ```shell
 npm run dev:emulators:all
 ```
 
-*Note: The hosting emulator will only work if there are build artifacts that in `/dist`. It does also not support hot reloading. Please don't use it to actively write code.* If you really want to start the full suite of emulators, you will need to build the project first. Alternatively, you can use `fire-all-engines` [*-> reference*](#everything-at-once).
+Starts all emulators, including the Hosting Emulator. Use this command to test the webapp in an environment that is as close to an actual production Firebase environment as possible.
+
+*Note: The hosting emulator will only work if there are build artifacts that in `/dist`. It does also not support hot reloading. Please don't use it to actively write code.* If you really want to start the full suite of emulators, you will need to build the project first. Alternatively, you can use `fire-all-engines` [*-> reference*](#everything-all-at-once).
 
 *Note: The emulators will quit if the Cloud Function have not been compiled at least once. Make sure to run `functions:build` [-> reference](#build-cloud-functions) least once before starting the emulators to avoid this error.*
 
-To lint your code using ESlint, use:
+#### Lint Webapp Code
 
 ```shell
 npm run lint
 ```
 
-If there are code issues that ESLint can fix for you, use:
+Runs ESLint to check your code for programatic errors, anti-patterns, styling errors, formatting errors, you name it.
 
 ```shell
 npm run lint:fix
 ```
 
-To type-check your code using the Typescript Compiler, use:
+ESLint will attempt to fix your code's issues automatically for you; but it may not get everything.
+
+#### Typecheck Webapp Code
 
 ```shell
 npm run type-check
 ```
 
-If you wish to trigger both linting and type-checking at the once, use:
+Runs your code through the Typescript Compiler to check for programmatic errors and type errors.
+
+#### General Check Webapp Code
 
 ```shell
 npm run check
 ```
 
+Lints and Typechecks your code all at once.
+
 *Note: this command will not fix code issues for you.*
 
-If you find yourself in need of cleaning up your environment, these commands have been provided for you.
-
-If you need to clean out the build artifacts, use:
+#### Clean Build Artifacts
 
 ```shell
 npm run clean:artifacts
 ```
 
-If you need to clean your directory of all the debug log files from the Firebase Emulators, use:
+Deletes all the build artifacts in `dist/`.
+
+#### Clean Firebase Emulators Debug Log Files
 
 ```shell
 npm run clean:debug
 ```
 
-If you need to clear the vite cache, use:
+Deletes all Firebase Emulator Debug log files from the project directory.
+
+#### Clean Vite Cache
 
 ```shell
 npn run clean:vite
 ```
 
-If you would like to clean out both debug files and the vite artifacts all at once: use,
+Cleans out the vite cache from your local enviroment. *Warning: Your build times may increase dramatically for the first time you attempt a build or dev after this command is run.
+
+#### Clean Build Artifacts, Debug Logs, and Cache
 
 ```shell
 npm run clean
 ```
 
-#### Cloud Functions
+Calls `clean:artifacts`, `clean:debug`, and `clean:vite` for you.
 
-To compile the Cloud Function and serve them with the Functions Emulator, use:
+#### Serve Cloud Functions
 
 ```shell
 npm run functions:serve
 ```
 
+Builds the Cloud Functions once and serves them with the Cloud Functions Emulator.
+
 *Note: This command does compile the functions in real time and does not enable hot-reloading.*
 
-The Functions Emulator does indeed support hot-reloading as long as something is built to `functions/dist`. But because the Functions Emulator does not compile the code like Vite does for it's dev server, you will need something to compile the commands in real time for the Functions Emulator to hot-reload the code.
-
-To compile the Cloud Functions and enable watching for recompilation on change, use:
+#### Build Cloud Functions with Watch Mode
 
 ```shell
 npm run functions:build:watch
 ```
 
+Builds the Cloud Functions and recompiles them when changes are detected to the source code. Useful for enabling hot-reloading with the Cloud Firestore Emulator.
+
+The Functions Emulator does indeed support hot-reloading as long as something is built to `functions/dist`. But because the Functions Emulator does not compile the code like Vite does for it's dev server, you will need something to compile the commands in real time for the Functions Emulator to hot-reload the code.
+
 *Note: you will need another terminal session to run the Functions Emulator as currently there is no support for concurrently running the compiler and running the emulator using a single command.* This may change in the future. I recommend that you setup something with tmux and tmuxinator if you really want that one-command-start experience.
 
-To compile the Cloud Functions and start an interactive shell in the Firebase Emulator, use:
+#### Start Cloud Functions Shell
 
 ```shell
 npm run functions:shell
 ```
 
-*Note: This command does not enable hot-reloading of Cloud Functions. I recommend using this command in conjunction with `functions:build:watch` [-> reference](#cloud-functions) to enable that experience. There is currently no support for running these commands concurrently.
+Compiles Cloud Functions once and then starts an interactive shell in the Firebase Emulator.
 
-To lint and type-check Cloud Functions code at once, run:
+**Note: This command also does not enable hot-reloading of Cloud Functions.** I recommend using this command in conjunction with `functions:build:watch` [-> reference](#build-cloud-functions-with-watch-mode) to enable that experience. There is currently no support for running these commands concurrently.
+
+#### Check Cloud Functions Code
 
 ```shell
 npm run functions:check
 ```
 
-*Note: There is currently no support for running linting or type-checking on Cloud Functions code independently from the base project directory. If you need to run either tool indepdently, change into the `functions/` directory and run the requiste scripts from in there. Check out `functions/package.json` for all Cloud Functions NPM Scripts.
+Lints and typechecks your Cloud Functions code all at once.
 
-To let ESLint attempt to fix some of your code's problems for you, run:
+**Note: There is currently no support for running linting or type-checking on Cloud Functions code independently from the base project directory.** If you need to run either tool indepdently, change into the `functions/` directory and run the requiste scripts from in there. Check out `functions/package.json` for all Cloud Functions NPM Scripts.
+
+#### Attempt Cloud Functions Code Fixing
 
 ```shell
 npm run functions:fix
 ```
 
-If you need to clean out the Cloud Functions build artifacts, use:
+ESLint will attempt to fix some of your Cloud Functions code problems for you.
+
+#### Clean Cloud Function Build Artifacts
 
 ```shell
 npm run functions:clean
 ```
 
-#### EVERYTHING AT ONCE
+Cleans out the Cloud Functions build artifacts from `functions/lib`.
 
-If you would like to check your code, compile both the Webapp and the Cloud Functions, and then start the entire emulation suite to serve your compiled artifacts, use:
+For more scripts related to Cloud Functions, please check out the `functions/package.json` and/or run those scripts from within `functions/`. You can also run Cloud Functions specific scripts from the root directory of the project by prefixing `npm run` with `--prefix functions`.
+
+```shell
+# Example Command
+npm --prefix functions run some:command:in:functions:folder
+# Running Serve
+npm --prefix functions run serve
+```
+
+#### EVERYTHING, ALL AT ONCE
 
 ```shell
 npm run fire-all-engines
 ```
 
-In essence, this command will build everything required for the application to run and then start everything that is required for the application to run successfull on your local system. If ESLint or the Typescript Compiler reports any problems with your code, the project will not be built and the emulators will not be started. Fix your code's issues and run this command again. This behavior is intentional.
+Checks your code in both Webapp and Cloud Functions, then builds both and starts the full Firebase Emulators suite. This is a close to a production Firebase environment on your local system as you can get.
+
+If ESLint or the Typescript Compiler reports any problems with your code, the project will not be built and the emulators will not be started. Fix your code's issues and run this command again. This behavior is intentional.
 
 ### Deployment
 
