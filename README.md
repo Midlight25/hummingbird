@@ -11,10 +11,12 @@
 ### Main (Stable)
 
 [![Node CI](https://github.com/Midlight25/hummingbird/actions/workflows/project-ci.yml/badge.svg?branch=main&event=push)](https://github.com/Midlight25/hummingbird/actions/workflows/project-ci.yml)
+[![Build](https://github.com/Midlight25/hummingbird/actions/workflows/project-cd.yml/badge.svg?branch=main&event=workflow_run)](https://github.com/Midlight25/hummingbird/actions/workflows/project-cd.yml)
 
 ### Development (Beta)
 
 [![Node CI](https://github.com/Midlight25/hummingbird/actions/workflows/project-ci.yml/badge.svg?branch=develop&event=push)](https://github.com/Midlight25/hummingbird/actions/workflows/project-ci.yml)
+[![Build](https://github.com/Midlight25/hummingbird/actions/workflows/project-cd.yml/badge.svg?branch=develop&event=workflow_run)](https://github.com/Midlight25/hummingbird/actions/workflows/project-cd.yml)
 
 ## Description
 
