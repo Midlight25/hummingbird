@@ -1,0 +1,38 @@
+name: "Build"
+on:
+  workflow_run:
+    workflows: ["Node CI"]
+    types: [completed]
+    branches:
+      - 'main'
+      - 'develop'
+
+jobs:
+  webapp_build:
+    name: "Build Webapp"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - name: "Install Dependencies"
+        run: npm ci
+      - name: "Vite Build"
+        run: npm run build
+  functions_build:
+    name: "Build Functions"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: functions
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+      - name: "Install Depdencies"
+        run: npm ci
+      - name: "Compile Functions"
+        run: npm build
