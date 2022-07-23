@@ -32,6 +32,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version-file: 'functions/.nvmrc'
+          cache: 'npm'
       - name: "Install Depdencies"
         run: npm ci
       - name: "Compile Functions"
