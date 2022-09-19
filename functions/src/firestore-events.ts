@@ -3,14 +3,25 @@
 
 import * as functions from "firebase-functions";
 
+import {db} from "./admin";
+import {getRandomInRange} from "./lib/generator";
+
+const results = db.collection("panels");
+
 export const queueFilledFunction = functions.firestore
-    .document("submissionQueue/{docId}")
+    .document("inputQueue/{docId}")
     .onCreate((snapshot, context) => {
       functions.logger.info({event: "submissionQueue:called"},
           "File uploaded to processing queue with ID", context.params.docId);
-      // Analyze JSON data from upload and calculate GPS Coordinates of panels
-      // Save to Firestore
-      return null;
+
+      const lat = getRandomInRange(-180, 180, 3);
+      const long = getRandomInRange(-180, 180, 3);
+      const panelId: string = context.params.docId;
+
+      results.add({lat: lat, long: long, panelId: panelId});
+
+      db.collection("inputQueue").doc(context.params.docId).delete();
+      return;
     });
 
 export const checkForDupeFunction = functions.firestore
