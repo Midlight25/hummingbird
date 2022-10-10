@@ -5,6 +5,7 @@ import * as functions from "firebase-functions";
 
 import {db} from "./admin";
 import {DroneImageData} from "./lib/types";
+import {checkAuth} from "./lib/auth";
 
 
 export const registerBatchFunction = functions.https.onRequest((req, res) => {
@@ -14,6 +15,20 @@ export const registerBatchFunction = functions.https.onRequest((req, res) => {
     functions.logger.error(loggerId + ":bad-content-type " +
     "Endpoint called without JSON.");
     res.sendStatus(400);
+    return;
+  }
+
+  const key = req.get("access-key");
+
+  if (!key) {
+    functions.logger.error(loggerId + ":no-key-supplied");
+    res.sendStatus(400);
+    return;
+  }
+
+  if (!checkAuth(key)) {
+    functions.logger.error(loggerId + ":unauthorized-attempt");
+    res.sendStatus(401);
     return;
   }
 
