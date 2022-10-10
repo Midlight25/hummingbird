@@ -1,0 +1,16 @@
+openapi: 3.0.3
+info:
+  version: 0.1.0
+  title: Hummingbird API
+  description: Process image data to GPS coordinates for broken solar panels.
+paths:
+  /registerBatch:
+    post:
+      description: Upload a batch of solar panels as a JSON object to be processed by the system. Receive a batch id in return.
+      responses:
+        200:
+          description: Batch upload successful.
+        400:
+          description: Request was malformed (no API key was not supplied or request was not sent as JSON.)
+        401:
+          description: API key is not valid.

@@ -4,6 +4,7 @@
 import * as functions from "firebase-functions";
 
 export const healthCheckFunction = functions.https.onRequest((req, res) => {
-  functions.logger.info("health-check:called", {structuredData: true});
+  functions.logger.info({event: "health-check:called"},
+      "Health Check has been called");
   res.send(200);
 });
