@@ -5,14 +5,19 @@ export interface DroneImageData {
 }
 
 interface Prediction {
-  box: [topLeftX: number,
+  box: [
+    topLeftX: number,
     topLeftY: number,
     botRightX: number,
-    botRightY: number],
-    center: [x: number, y: number],
-    label: FailureLabel,
-    label_id: number,
-    score: number
+    botRightY: number
+  ],
+  center: [
+    x: number,
+    y: number
+  ],
+  label: FailureLabel,
+  label_id: number,
+  score: number
 }
 
 enum FailureLabel {
@@ -46,7 +51,10 @@ interface ExifData {
   DateTimeDigitized: string,
   ComponentsConfiguration: string,
   ShutterSpeedValue: [number, number],
-  ApertureValue: [number, number]
+  ApertureValue: [number, number],
+  FocalLength: [length: number, significance: number],
+  PixelXDimension: number,
+  PixelYDimension: number,
 }
 
 interface GimbalData {
@@ -75,8 +83,17 @@ interface GPSData {
 
 type CardinalDirection = ("N" | "E" | "S" | "W")
 
-type GPSLocale = [
+export type GPSLocale = [
   [degrees: number, significance: number],
   [minutes: number, significance: number],
   [seconds: number, significance: number],
 ]
+
+export interface ImageDataRecord {
+    gpsPosition: number[];
+    pixelSize: number;
+    relativeAltitude: number;
+    focalLength: number;
+    Predictions: Prediction[];
+    imageSize: number[];
+}

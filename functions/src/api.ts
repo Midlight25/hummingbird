@@ -4,9 +4,9 @@
 import * as functions from "firebase-functions";
 
 import {db} from "./admin";
-import {DroneImageData} from "./lib/types";
-import {checkAuth} from "./lib/auth";
+import {DroneImageData, ImageDataRecord} from "./lib/types";
 
+import {exifGPStoDecimalDegrees} from "./lib/gis";
 
 export const registerBatchFunction = functions.https.onRequest((req, res) => {
   const loggerId = "registerBatch";
@@ -18,37 +18,43 @@ export const registerBatchFunction = functions.https.onRequest((req, res) => {
     return;
   }
 
-  const key = req.get("access-key");
-
-  if (!key) {
-    functions.logger.error(loggerId + ":no-key-supplied");
-    res.sendStatus(400);
-    return;
-  }
-
-  if (!checkAuth(key)) {
-    functions.logger.error(loggerId + ":unauthorized-attempt");
-    res.sendStatus(401);
-    return;
-  }
-
   functions.logger.info(loggerId + ":called");
 
   const batchData = req.body;
-  const processedData: Array<DroneImageData> = [];
+  const processedData: Array<ImageDataRecord> = [];
   const queue = db.collection("inputQueue");
 
-  functions.logger.debug(loggerId + ":report-json", {data: batchData});
+  // functions.logger.debug(loggerId + ":report-json", {data: batchData});
 
+  for (const value of Object.values<DroneImageData>(batchData)) {
+    const latDMS = value.metadata.GPS.GPSLatitude;
+    const longDMS = value.metadata.GPS.GPSLongitude;
 
-  for (const value of Object.values(batchData)) {
-    // @ts-ignore
-    processedData.push(value);
+    const latDD = exifGPStoDecimalDegrees(latDMS);
+    const longDD = exifGPStoDecimalDegrees(longDMS);
+
+    const imageData: ImageDataRecord = {
+      gpsPosition: [latDD, longDD],
+      pixelSize: 0.000017,
+      relativeAltitude: value.metadata.gimbal_data.RelativeAltitude,
+      focalLength: value.metadata.Exif.FocalLength[0] /
+        value.metadata.Exif.FocalLength[1],
+      Predictions: value.Predictions,
+      imageSize: [value.metadata.Exif.PixelXDimension,
+        value.metadata.Exif.PixelYDimension],
+    };
+
+    processedData.push(imageData);
+  }
+
+  for (const image of processedData) {
+    queue.add(image);
   }
 
   functions.logger.debug("Number of images registered: ",
       processedData.length);
 
+  functions.logger.debug("Check it", {data: processedData});
   res.sendStatus(200);
   return;
 });
