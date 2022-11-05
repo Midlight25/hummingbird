@@ -2,13 +2,13 @@
 // Author: Midlight25
 
 import * as functions from "firebase-functions";
+import {randomBytes} from "crypto";
 
 import {db} from "./admin";
+import {exifGPStoDecimalDegrees} from "./lib/gis";
 import {DroneImageData, ImageDataRecord} from "./lib/types";
 
-import {exifGPStoDecimalDegrees} from "./lib/gis";
-
-export const registerBatchFunction = functions.https.onRequest((req, res) => {
+export const registerBatchFunction = functions.https.onRequest((req, res)=> {
   const loggerId = "registerBatch";
 
   if (req.get("content-type") !== "application/json") {
@@ -19,6 +19,8 @@ export const registerBatchFunction = functions.https.onRequest((req, res) => {
   }
 
   functions.logger.info(loggerId + ":called");
+
+  const batchId = randomBytes(21).toString("base64").slice(0, 21);
 
   const batchData = req.body;
   const processedData: Array<ImageDataRecord> = [];
@@ -47,14 +49,21 @@ export const registerBatchFunction = functions.https.onRequest((req, res) => {
     processedData.push(imageData);
   }
 
-  for (const image of processedData) {
-    queue.add(image);
-  }
+  // for (const image of processedData) {
+  //   queue.add(image);
+  // }
 
-  functions.logger.debug("Number of images registered: ",
-      processedData.length);
+  queue.add({"batchID": batchId}).then((docRef) => {
+    const imageCollection = docRef.collection("images");
 
-  functions.logger.debug("Check it", {data: processedData});
-  res.sendStatus(200);
+    for (const image of processedData) {
+      imageCollection.add(image);
+    }
+  });
+
+  functions.logger.debug(loggerId + `Batch registered with ID: ${batchId} ` +
+    `with ${processedData.length} images registered.`);
+
+  res.json({"batchID": batchId});
   return;
 });
