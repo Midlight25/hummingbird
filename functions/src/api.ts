@@ -8,7 +8,7 @@ import {db} from "./admin";
 import {exifGPStoDecimalDegrees} from "./lib/gis";
 import {DroneImageData, ImageDataRecord} from "./lib/types";
 
-export const registerBatchFunction = functions.https.onRequest((req, res)=> {
+export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {
   const loggerId = "registerBatch";
 
   if (req.get("content-type") !== "application/json") {
@@ -25,8 +25,6 @@ export const registerBatchFunction = functions.https.onRequest((req, res)=> {
   const batchData = req.body;
   const processedData: Array<ImageDataRecord> = [];
   const queue = db.collection("inputQueue");
-
-  // functions.logger.debug(loggerId + ":report-json", {data: batchData});
 
   for (const value of Object.values<DroneImageData>(batchData)) {
     const latDMS = value.metadata.GPS.GPSLatitude;
@@ -49,20 +47,19 @@ export const registerBatchFunction = functions.https.onRequest((req, res)=> {
     processedData.push(imageData);
   }
 
-  // for (const image of processedData) {
-  //   queue.add(image);
-  // }
-
-  queue.add({"batchID": batchId}).then((docRef) => {
-    const imageCollection = docRef.collection("images");
-
+  try {
+    const batchRecord = await queue.add({"batchID": batchId});
+    const imgSubCollection = batchRecord.collection("images");
     for (const image of processedData) {
-      imageCollection.add(image);
+      imgSubCollection.add(image);
     }
-  });
+  } catch (exception) {
+    functions.logger.error(loggerId + ":failed-to-create-batch-record",
+        {exception: exception});
+  }
 
-  functions.logger.debug(loggerId + `Batch registered with ID: ${batchId} ` +
-    `with ${processedData.length} images registered.`);
+  functions.logger.debug(loggerId + ":batch-registered",
+      {batchID: batchId, numImagesRegistered: processedData.length});
 
   res.json({"batchID": batchId});
   return;

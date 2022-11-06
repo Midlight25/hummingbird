@@ -3,9 +3,9 @@
 
 import {healthCheckFunction} from "./health";
 import {queueFilledFunction} from "./firestore-events";
-import {registerBatchFunction} from "./api";
+import {registerBatchFunc} from "./api";
 
 export const health = healthCheckFunction;
 export const queueFilled = queueFilledFunction;
 // export const checkForDupe = checkForDupeFunction;
-export const registerBatch = registerBatchFunction;
+export const registerBatch = registerBatchFunc;

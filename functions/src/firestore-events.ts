@@ -3,7 +3,7 @@
 
 import * as functions from "firebase-functions";
 import {randomBytes} from "crypto";
-import {PanelData, Prediction, pixelPosition} from "./lib/types";
+import {PanelData, Prediction, pixelPosition, ImageDataRecord} from "./lib/types";
 import {calculateGPSCoords} from "./lib/gis";
 
 import {db} from "./admin";
@@ -12,47 +12,49 @@ const RESULTS = db.collection("panels");
 
 export const queueFilledFunction = functions.firestore
     .document("inputQueue/{docId}")
-    .onCreate((snapshot, context) => {
-      functions.logger.info({event: "submissionQueue:called"},
-          "File uploaded to processing queue with ID", context.params.docId);
+    .onCreate(async (snapshot, context) => {
+      const loggerId = "submissionQueue";
 
       const documentData = snapshot.data();
       const batchId: string = documentData.batchID;
 
+      functions.logger.info(loggerId + ":called",
+          {docId: context.params.docId, batchId: batchId});
+
       const documentRef = snapshot.ref;
 
-      documentRef.collection("images").get().then((images) => {
-        images.forEach((image) => {
-          const imageData = image.data();
+      const querySnapshot = await documentRef.collection("images").get();
 
-          const focalLength: number = imageData.focalLength;
-          const gpsPosition: [number, number] = imageData.gpsPosition;
-          const imageSize: [number, number] = imageData.imageSize;
-          const relativeAltitude: number = imageData.relativeAltitude;
-          const pixelSize: number = imageData.pixelSize;
+      querySnapshot.forEach((doc) => {
+        const imageData = doc.data();
+        const focalLength: number = imageData.focalLength;
+        const gpsPosition: [number, number] = imageData.gpsPosition;
+        const imageSize: [number, number] = imageData.imageSize;
+        const relativeAltitude: number = imageData.relativeAltitude;
+        const pixelSize: number = imageData.pixelSize;
 
-          const imageCenter: pixelPosition = [
-            Math.floor(imageSize[0] / 2),
-            Math.floor(imageSize[1] / 2),
-          ];
+        const imageCenter: pixelPosition = [
+          Math.floor(imageSize[0] / 2),
+          Math.floor(imageSize[1] / 2),
+        ];
 
-          const panelsInImage = Array<PanelData>();
+        const panelsInImage = Array<PanelData>();
 
-          imageData.Predictions.forEach((prediction: Prediction) => {
-            const gpsPredict = calculateGPSCoords(gpsPosition, pixelSize,
-                relativeAltitude, focalLength, prediction.center, imageCenter);
-            const panelId = randomBytes(16).toString("base64").slice(0, 16);
+        imageData.Predictions.forEach((prediction: Prediction) => {
+          const gpsPredict = calculateGPSCoords(gpsPosition, pixelSize,
+              relativeAltitude, focalLength, prediction.center, imageCenter);
+          const panelId = randomBytes(16).toString("base64").slice(0, 16);
 
-            panelsInImage.push({
-              id: panelId,
-              location: gpsPredict,
-              faultType: prediction.label,
-              truePanel: true,
-            });
+          functions.logger.debug(loggerId + ":gps-position-calculated",
+              {data: {gpsPosition: gpsPosition, panelCenter: prediction.center,
+                imageCenter: imageCenter, faultType: prediction.label}});
+
+          panelsInImage.push({
+            id: panelId,
+            location: gpsPredict,
+            faultType: prediction.label,
+            truePanel: true,
           });
-
-          functions.logger.info("Image found",
-              {data: panelsInImage});
         });
       });
 
