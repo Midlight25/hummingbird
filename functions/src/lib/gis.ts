@@ -1,7 +1,7 @@
 import * as proj4 from "proj4";
-import {GPSLocale} from "./types";
+import {GPSLocaleDMS, gpsPosition, pixelPosition} from "./types";
 
-export function exifGPStoDecimalDegrees(heading: GPSLocale): number {
+export function exifGPStoDecimalDegrees(heading: GPSLocaleDMS): number {
   const degrees = heading[0][0] / heading[0][1];
   const minutes = heading[1][0] / heading[1][1];
   const seconds = heading[2][0] / heading[2][1];
@@ -51,7 +51,7 @@ function calcPixelDistance(boxCenter: pixelPosition,
  */
 export function calculateGPSCoords(gpsInput: gpsPosition, pixelSize = 0.000017,
     relativeAltitude = 30, focalLength = 0.013, boxCenter: pixelPosition,
-    imageCenter: pixelPosition): number[] {
+    imageCenter: pixelPosition): gpsPosition {
   const gsd = findGSD(pixelSize, relativeAltitude, focalLength);
 
   const aZone = utmZoneFromLon(gpsInput[1]);
@@ -88,8 +88,5 @@ export function calculateGPSCoords(gpsInput: gpsPosition, pixelSize = 0.000017,
   const wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
   const utmToLatLong = proj4(utm, wgs84, [newE, newN]);
 
-  return utmToLatLong;
+  return [utmToLatLong[0], utmToLatLong[1]];
 }
-
-export type pixelPosition = [x: number, y: number];
-export type gpsPosition = [lat: number, long: number];

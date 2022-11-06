@@ -4,7 +4,7 @@ export interface DroneImageData {
   metadata: Metadata,
 }
 
-interface Prediction {
+export interface Prediction {
   box: [
     topLeftX: number,
     topLeftY: number,
@@ -18,6 +18,13 @@ interface Prediction {
   label: FailureLabel,
   label_id: number,
   score: number
+}
+
+export interface PanelData {
+  id: string,
+  location: gpsPosition,
+  faultType: FailureLabel,
+  truePanel: boolean
 }
 
 enum FailureLabel {
@@ -74,16 +81,16 @@ interface GimbalData {
 interface GPSData {
   GPSVersionID: [major: number, minor: number, patch: number, release: number],
   GPSLatitudeRef: CardinalDirection,
-  GPSLatitude: GPSLocale,
+  GPSLatitude: GPSLocaleDMS,
   GPSLongitudeRef: CardinalDirection,
-  GPSLongitude: GPSLocale,
+  GPSLongitude: GPSLocaleDMS,
   GPSAltitudeRef: number,
   GPSAltitude: [height: number, significance: number],
 }
 
 type CardinalDirection = ("N" | "E" | "S" | "W")
 
-export type GPSLocale = [
+export type GPSLocaleDMS = [
   [degrees: number, significance: number],
   [minutes: number, significance: number],
   [seconds: number, significance: number],
@@ -97,3 +104,6 @@ export interface ImageDataRecord {
     Predictions: Prediction[];
     imageSize: number[];
 }
+
+export type pixelPosition = [x: number, y: number];
+export type gpsPosition = [lat: number, long: number];
