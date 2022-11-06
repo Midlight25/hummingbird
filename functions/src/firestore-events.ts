@@ -47,8 +47,11 @@ export const queueFilledFunction = functions.firestore
           const panelId = randomBytes(16).toString("base64").slice(0, 16);
 
           functions.logger.debug(loggerId + ":gps-position-calculated",
-              {data: {gpsPosition: gpsPosition, panelCenter: prediction.center,
-                imageCenter: imageCenter, faultType: prediction.label}});
+              {panelData: {gpsPosition: gpsPredict,
+                panelCenter: prediction.center,
+                imageCenter: imageCenter,
+                faultType: prediction.label,
+                panelId: panelId}});
 
           panelsInImage.push({
             id: panelId,
