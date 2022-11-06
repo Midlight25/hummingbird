@@ -30,8 +30,13 @@ export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {
     const latDMS = value.metadata.GPS.GPSLatitude;
     const longDMS = value.metadata.GPS.GPSLongitude;
 
-    const latDD = exifGPStoDecimalDegrees(latDMS);
-    const longDD = exifGPStoDecimalDegrees(longDMS);
+    let latDD = exifGPStoDecimalDegrees(latDMS);
+    let longDD = exifGPStoDecimalDegrees(longDMS);
+
+    latDD = (value.metadata.GPS.GPSLatitudeRef === "S") ?
+      -1 * latDD : latDD;
+    longDD = (value.metadata.GPS.GPSLongitudeRef === "W") ?
+      -1 * longDD : longDD;
 
     const imageData: ImageDataRecord = {
       gpsPosition: [latDD, longDD],

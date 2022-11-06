@@ -3,7 +3,8 @@
 
 import * as functions from "firebase-functions";
 import {randomBytes} from "crypto";
-import {PanelData, Prediction, pixelPosition, ImageDataRecord} from "./lib/types";
+import {PanelData, Prediction, pixelPosition, ImageDataRecord}
+  from "./lib/types";
 import {calculateGPSCoords} from "./lib/gis";
 
 import {db} from "./admin";
