@@ -1,4 +1,6 @@
 import * as proj4 from "proj4";
+// import haversine from "haversine-distance";
+import * as haversine from "haversine-distance";
 
 type pixelPosition = [x: number, y: number];
 
@@ -6,6 +8,8 @@ export type gpsPositionDD = [latitude: number, longitude: number];
 
 export interface Panel {
   gpsPositionDD: gpsPositionDD;
+  // This panel's gps coordinates are accurate enough to be considered true.
+  truePanel: boolean;
 }
 
 export interface Prediction {
@@ -51,12 +55,25 @@ export class Image {
   }
 
   /**
-  * Calculate the GPS position of a panel based of image metadata
-  * @return {gpsPositionDD} Lat/Long of off-center object in image
-  */
-  calculateGPSCoords<T extends Prediction>(item: T): gpsPositionDD {
-    const imageCenter = this.imageSize.map((value) => Math.floor(value / 2));
+   * Calculate image centerpoint from image size
+   */
+  get imageCenter(): [x: number, y: number] {
+    return [Math.floor(this.imageSize[0] / 2),
+      Math.floor(this.imageSize[1] / 2)];
+  }
 
+  /**
+   * Calculate radius around center to be considered true panel zone.
+   */
+  get threshold(): number {
+    return this.imageSize[1] * 0.1;
+  }
+
+  /**
+   * Calculate the GPS position of a panel based of image metadata
+   * @return {gpsPositionDD} Lat/Long of off-center object in image
+   */
+  calcGPSCoords<T extends Prediction>(item: T): gpsPositionDD {
     // eslint-disable-next-line
     proj4.defs([
       [
@@ -78,8 +95,8 @@ export class Image {
     const n4Digits = parseInt(enM[1].toFixed(4)); // northing
 
     // X,Y difference in points * gsd to obtain distance
-    const xDiff = (item.location[0] - imageCenter[0]) * this.gsd;
-    const yDiff = (item.location[1] - imageCenter[1]) * this.gsd;
+    const xDiff = (item.location[0] - this.imageCenter[0]) * this.gsd;
+    const yDiff = (item.location[1] - this.imageCenter[1]) * this.gsd;
 
     // New easting and northing values
     const newE = e4Digits - xDiff;
@@ -92,12 +109,57 @@ export class Image {
 
     return [utmToLatLong[0], utmToLatLong[1]];
   }
+
+  /**
+   * Process predictions and report as panel array.
+   */
+  processPredictions<T extends Prediction>(predictions: T[]): Panel[] {
+    const gpsPos = predictions.map((pred) => this.calcGPSCoords(pred));
+
+    const panels: Panel[] = gpsPos.map((gps) => {
+      return {gpsPositionDD: gps, truePanel: false};
+    });
+
+    const pixDistances = predictions.map((pred) =>
+      this.calcPixelDistance(pred.location));
+    const minDistance = Math.min(...pixDistances);
+    const minDistIndex = pixDistances.indexOf(minDistance);
+
+    if (minDistance < this.threshold) {
+      panels[minDistIndex].truePanel = true;
+    }
+
+    return panels;
+  }
+
+  /**
+   * Calculate pythagorean distance from center point of image
+   */
+  calcPixelDistance(locA: pixelPosition): number {
+    return Math.hypot(locA[0] - this.imageCenter[0],
+        locA[1] - this.imageCenter[1]);
+  }
 }
 
 /**
- * Calculate pythagorean distance between two pixel positions
+ * Filter panels for duplicates, true panels are untouched.
+ * Distance Threshold should be width of solar panel minus 5-10% ish
  */
-function calcPixelDistance(locA: pixelPosition, locB: pixelPosition): number {
-  return Math.hypot(locA[0] - locB[0],
-      locA[1] - locB[1]);
+export function removeDuplicates<T extends Panel>(panels: T[],
+    distanceThreshold = 0.90): T[] {
+  const truePanels = panels.filter((item) => item.truePanel);
+  const predicts = panels.filter((item) => !item.truePanel);
+
+  predicts.forEach((panel) => {
+    const distancesMeters = truePanels.map((tPanel) =>
+      haversine(tPanel.gpsPositionDD, panel.gpsPositionDD));
+    // Accounting for truePanels possibly being empty
+    distancesMeters.push(Number.POSITIVE_INFINITY);
+    const minDistance = Math.min(...distancesMeters);
+    if (minDistance > distanceThreshold) {
+      truePanels.push(panel);
+    }
+  });
+
+  return truePanels;
 }
