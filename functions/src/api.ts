@@ -5,7 +5,7 @@ import * as functions from "firebase-functions";
 import {randomBytes} from "crypto";
 
 import {db} from "./admin";
-import {exifGPStoDecimalDegrees} from "./lib/gis";
+import {exifGPStoDecimalDegrees} from "./lib/exifGPStoDecimalDegrees";
 import {DroneImageData, ImageDataRecord} from "./lib/types";
 
 export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {

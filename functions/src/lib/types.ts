@@ -1,3 +1,4 @@
+import {gpsPositionDD} from "./gis";
 export interface DroneImageData {
   Predictions: Array<Prediction>,
   Filename: string,
@@ -22,7 +23,7 @@ export interface Prediction {
 
 export interface PanelData {
   id: string,
-  location: gpsPosition,
+  location: gpsPositionDD,
   faultType: FailureLabel,
   truePanel: boolean
 }
@@ -104,6 +105,3 @@ export interface ImageDataRecord {
     Predictions: Prediction[];
     imageSize: number[];
 }
-
-export type pixelPosition = [x: number, y: number];
-export type gpsPosition = [lat: number, long: number];
