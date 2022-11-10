@@ -3,8 +3,8 @@
 
 import * as functions from "firebase-functions";
 import {randomBytes} from "crypto";
-import {PanelData, Prediction, pixelPosition, ImageDataRecord}
-  from "./lib/types";
+import {HMPanel, PredictionJSON, pixelPosition, ImageRecord}
+  from "./lib/hummingbird-types";
 import {calculateGPSCoords} from "./lib/gis";
 
 import {db} from "./admin";
@@ -39,9 +39,9 @@ export const queueFilledFunction = functions.firestore
           Math.floor(imageSize[1] / 2),
         ];
 
-        const panelsInImage = Array<PanelData>();
+        const panelsInImage = Array<HMPanel>();
 
-        imageData.Predictions.forEach((prediction: Prediction) => {
+        imageData.Predictions.forEach((prediction: PredictionJSON) => {
           const gpsPredict = calculateGPSCoords(gpsPosition, pixelSize,
               relativeAltitude, focalLength, prediction.center, imageCenter);
           const panelId = randomBytes(16).toString("base64").slice(0, 16);

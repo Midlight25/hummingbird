@@ -1,32 +1,24 @@
-import {gpsPositionDD} from "./gis";
-export interface DroneImageData {
-  Predictions: Array<Prediction>,
+import {Image, gpsPositionDD, Panel, Prediction, pixelPosition} from "./gis";
+import {randomBytes} from "crypto";
+
+export interface DroneImageJSON {
+  Predictions: Array<PredictionJSON>,
   Filename: string,
-  metadata: Metadata,
+  metadata: MetadataJSON,
 }
 
-export interface Prediction {
+export interface PredictionJSON extends Prediction {
   box: [
     topLeftX: number,
     topLeftY: number,
     botRightX: number,
     botRightY: number
   ],
-  center: [
-    x: number,
-    y: number
-  ],
   label: FailureLabel,
   label_id: number,
   score: number
 }
 
-export interface PanelData {
-  id: string,
-  location: gpsPositionDD,
-  faultType: FailureLabel,
-  truePanel: boolean
-}
 
 enum FailureLabel {
     EDGE_HOTSPOT = "Edge Hotspot",
@@ -40,16 +32,16 @@ enum FailureLabel {
     STRING_SHORT_CIRCUIT = "String Short Circuit"
 }
 
-interface Metadata {
+interface MetadataJSON {
   // "0th": number,
   // "1st": number,
-  Exif: ExifData,
-  GPS: GPSData,
+  Exif: ExifDataJSON,
+  GPS: GPSDataJSON,
   // Interop: Record<string, unknown>,
-  gimbal_data: GimbalData,
+  gimbal_data: GimbalDataJSON,
 }
 
-interface ExifData {
+interface ExifDataJSON {
   ExposureTime: [number, number],
   FNumber: [number, number],
   ExposureProgram: number,
@@ -65,7 +57,7 @@ interface ExifData {
   PixelYDimension: number,
 }
 
-interface GimbalData {
+interface GimbalDataJSON {
   AbsoluteAltitude: number,
   RelativeAltitude: number,
   GimbalRollDegree: number,
@@ -79,7 +71,7 @@ interface GimbalData {
   RtkFlag: number,
 }
 
-interface GPSData {
+interface GPSDataJSON {
   GPSVersionID: [major: number, minor: number, patch: number, release: number],
   GPSLatitudeRef: CardinalDirection,
   GPSLatitude: GPSLocaleDMS,
@@ -89,19 +81,52 @@ interface GPSData {
   GPSAltitude: [height: number, significance: number],
 }
 
-type CardinalDirection = ("N" | "E" | "S" | "W")
+export enum CardinalDirection {
+  NORTH = "N",
+  EAST = "E",
+  SOUTH = "S",
+  WEST = "W",
+}
+
+export class ImageRecord extends Image {
+  predictions: Array<HMPrediction>;
+
+  constructor(gpsPositionDD: gpsPositionDD, imageSize: [x: number, y: number],
+      predictions: Array<HMPrediction>, focalLength?: number,
+      pixelSize?: number, relativeAltitude?: number) {
+    super(gpsPositionDD, imageSize, focalLength, pixelSize, relativeAltitude);
+    this.predictions = predictions;
+  }
+}
+
+export class HMPanel implements Panel {
+  id: string;
+  faultType: FailureLabel;
+  gpsPositionDD: gpsPositionDD;
+  truePanel: boolean;
+
+  constructor(id = "", faultType: FailureLabel,
+      gpsPositionDD: gpsPositionDD, truePanel = false) {
+    this.faultType = faultType;
+    this.gpsPositionDD = gpsPositionDD;
+    this.truePanel = truePanel;
+    this.id = id ? id : randomBytes(16).toString("base64").slice(0, 16);
+  }
+}
+
+// Location and label
+export class HMPrediction implements Prediction {
+  label: FailureLabel;
+  location: pixelPosition;
+
+  constructor(location: pixelPosition, label: FailureLabel) {
+    this.location = location;
+    this.label = label;
+  }
+}
 
 export type GPSLocaleDMS = [
   [degrees: number, significance: number],
   [minutes: number, significance: number],
-  [seconds: number, significance: number],
-]
-
-export interface ImageDataRecord {
-    gpsPosition: number[];
-    pixelSize: number;
-    relativeAltitude: number;
-    focalLength: number;
-    Predictions: Prediction[];
-    imageSize: number[];
-}
+  [seconds: number, significance: number]
+];

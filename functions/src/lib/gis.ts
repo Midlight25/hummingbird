@@ -1,14 +1,15 @@
 import * as proj4 from "proj4";
-// import haversine from "haversine-distance";
 import * as haversine from "haversine-distance";
 
-type pixelPosition = [x: number, y: number];
+export type pixelPosition = [x: number, y: number];
 
+// DD stands for Decimal Degrees
 export type gpsPositionDD = [latitude: number, longitude: number];
 
 export interface Panel {
   gpsPositionDD: gpsPositionDD;
-  // This panel's gps coordinates are accurate enough to be considered true.
+  // This panel's gps coordinates are close enough to the original GPS
+  // from the image to be considered true and not calculated.
   truePanel: boolean;
 }
 
@@ -19,12 +20,12 @@ export interface Prediction {
 export class Image {
   gpsPositionDD: gpsPositionDD;
   imageSize: [x_size: number, y_size: number];
-  focalLength = 0.013; // Always in meters
-  pixelSize = 0.000017;
-  relativeAltitude = 30; // Always in meters
+  focalLength: number; // Always in meters
+  pixelSize: number;
+  relativeAltitude: number; // Always in meters
 
   constructor(gpsPositionDD: gpsPositionDD, imageSize: [x: number, y: number],
-      focalLength: number, pixelSize: number, relativeAltitude: number) {
+      focalLength = 0.013, pixelSize = 0.000017, relativeAltitude = 30) {
     this.gpsPositionDD = gpsPositionDD;
     this.imageSize = imageSize;
     this.focalLength = focalLength;

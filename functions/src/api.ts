@@ -5,8 +5,8 @@ import * as functions from "firebase-functions";
 import {randomBytes} from "crypto";
 
 import {db} from "./admin";
-import {exifGPStoDecimalDegrees} from "./lib/exifGPStoDecimalDegrees";
-import {DroneImageData, ImageDataRecord} from "./lib/types";
+import {exifGPStoDecimalDegrees} from "./lib/hm_utils";
+import {DroneImageJSON, ImageRecord} from "./lib/hummingbird-types";
 
 export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {
   const loggerId = "registerBatch";
@@ -23,10 +23,10 @@ export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {
   const batchId = randomBytes(21).toString("base64").slice(0, 21);
 
   const batchData = req.body;
-  const processedData: Array<ImageDataRecord> = [];
+  const processedData: Array<ImageRecord> = [];
   const queue = db.collection("inputQueue");
 
-  for (const value of Object.values<DroneImageData>(batchData)) {
+  for (const value of Object.values<DroneImageJSON>(batchData)) {
     const latDMS = value.metadata.GPS.GPSLatitude;
     const longDMS = value.metadata.GPS.GPSLongitude;
 
@@ -38,7 +38,7 @@ export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {
     longDD = (value.metadata.GPS.GPSLongitudeRef === "W") ?
       -1 * longDD : longDD;
 
-    const imageData: ImageDataRecord = {
+    const imageData: ImageRecord = {
       gpsPosition: [latDD, longDD],
       pixelSize: 0.000017,
       relativeAltitude: value.metadata.gimbal_data.RelativeAltitude,

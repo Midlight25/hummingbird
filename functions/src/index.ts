@@ -7,5 +7,4 @@ import {registerBatchFunc} from "./api";
 
 export const health = healthCheckFunction;
 export const queueFilled = queueFilledFunction;
-// export const checkForDupe = checkForDupeFunction;
 export const registerBatch = registerBatchFunc;
