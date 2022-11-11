@@ -2,7 +2,6 @@
 // Author: Midlight25
 
 import * as functions from "firebase-functions";
-import {randomBytes} from "crypto";
 
 import {db} from "./admin";
 import {convertImgJSON, imageRecordConverter} from "./lib/hm_utils";
@@ -20,7 +19,6 @@ export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {
 
   functions.logger.info(loggerId + ":called");
 
-  const batchId = randomBytes(21).toString("base64").slice(0, 21);
   const rawData = req.body;
   const processedData: Array<ImageRecord> = [];
   const processingQueue = db.collection("inputQueue");
@@ -31,18 +29,19 @@ export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {
   }
 
   try {
-    const batchRecord = await processingQueue.add({"batchID": batchId});
+    const batchRecord = await processingQueue.add({processingDone: false});
     const imgSubCollection = batchRecord.collection("images");
     for (const image of processedData) {
       imgSubCollection.withConverter(imageRecordConverter).add(image);
     }
+
+    functions.logger.debug(loggerId + ":batch-registered",
+        {batchID: batchRecord.id, numImagesRegistered: processedData.length});
+    res.json({"batchID": batchRecord.id});
   } catch (exception) {
     functions.logger.error(loggerId + ":failed-to-create-batch-record");
+    res.sendStatus(500);
   }
 
-  functions.logger.debug(loggerId + ":batch-registered",
-      {batchID: batchId, numImagesRegistered: processedData.length});
-
-  res.json({"batchID": batchId});
   return;
 });

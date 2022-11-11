@@ -1,5 +1,6 @@
 import {DocumentData, QueryDocumentSnapshot} from "firebase-admin/firestore";
 import {CardinalDirection, DroneImageJSON, GPSLocaleDMS,
+  HMPanel,
   HMPrediction, ImageRecord} from "./hummingbird-types";
 
 export function exifGPStoDecimalDegrees(heading: GPSLocaleDMS): number {
@@ -61,5 +62,20 @@ export const imageRecordConverter = {
     return new ImageRecord(docData.gpsPositionDD, docData.imageSize,
         predictions, docData.focalLength, docData.pixelSize,
         docData.relativeAltitude);
+  },
+};
+
+export const hmPanelConverter = {
+  toFirestore: (panel: HMPanel) => {
+    return {
+      faultType: panel.faultType,
+      gpsPositionDD: panel.gpsPositionDD,
+      truePanel: panel.truePanel,
+    };
+  },
+  fromFirestore: (snapshot: QueryDocumentSnapshot<DocumentData>) => {
+    const docData = snapshot.data();
+    return new HMPanel(docData.gpsPositionDD, docData.faultType,
+        docData.truePanel, snapshot.id);
   },
 };

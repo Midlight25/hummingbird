@@ -98,6 +98,15 @@ export class ImageRecord extends Image {
     super(gpsPositionDD, imageSize, focalLength, pixelSize, relativeAltitude);
     this.predictions = predictions;
   }
+
+  processHMPredictions<T extends HMPrediction>(predictions: T[]): HMPanel[] {
+    const panels = super.processPredictions(predictions);
+    const hmPanels = panels.map((panel, index) => {
+      return new HMPanel(panel.gpsPositionDD, predictions[index].label,
+          panel.truePanel);
+    });
+    return hmPanels;
+  }
 }
 
 export class HMPanel implements Panel {
@@ -106,12 +115,12 @@ export class HMPanel implements Panel {
   gpsPositionDD: gpsPositionDD;
   truePanel: boolean;
 
-  constructor(id = "", faultType: FailureLabel,
-      gpsPositionDD: gpsPositionDD, truePanel = false) {
+  constructor( gpsPositionDD: gpsPositionDD, faultType: FailureLabel,
+      truePanel = false, id = "") {
     this.faultType = faultType;
     this.gpsPositionDD = gpsPositionDD;
     this.truePanel = truePanel;
-    this.id = id ? id : randomBytes(16).toString("base64").slice(0, 16);
+    this.id = id ? id : randomBytes(16).toString("hex").slice(0, 16);
   }
 }
 

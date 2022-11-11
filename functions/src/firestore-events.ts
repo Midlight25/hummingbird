@@ -2,68 +2,45 @@
 // Author: Midlight25
 
 import * as functions from "firebase-functions";
-import {randomBytes} from "crypto";
-import {HMPanel, PredictionJSON, pixelPosition, ImageRecord}
-  from "./lib/hummingbird-types";
-import {calculateGPSCoords} from "./lib/gis";
 
 import {db} from "./admin";
+import {hmPanelConverter, imageRecordConverter} from "./lib/hm_utils";
+import {removeDuplicates} from "./lib/gis";
+import {HMPanel} from "./lib/hummingbird-types";
 
 const RESULTS = db.collection("panels");
 
 export const queueFilledFunction = functions.firestore
     .document("inputQueue/{docId}")
-    .onCreate(async (snapshot, context) => {
+    .onCreate(async (snapshot) => {
       const loggerId = "submissionQueue";
 
-      const documentData = snapshot.data();
-      const batchId: string = documentData.batchID;
+      const batchId: string = snapshot.id;
+      const documentRef = snapshot.ref;
+      const querySnapshot = await documentRef.collection("images")
+          .withConverter(imageRecordConverter).get();
+      const allPanels = new Array<HMPanel>();
 
       functions.logger.info(loggerId + ":called",
-          {docId: context.params.docId, batchId: batchId});
+          {batchId: batchId});
 
-      const documentRef = snapshot.ref;
-
-      const querySnapshot = await documentRef.collection("images").get();
-
-      querySnapshot.forEach((doc) => {
-        const imageData = doc.data();
-        const focalLength: number = imageData.focalLength;
-        const gpsPosition: [number, number] = imageData.gpsPosition;
-        const imageSize: [number, number] = imageData.imageSize;
-        const relativeAltitude: number = imageData.relativeAltitude;
-        const pixelSize: number = imageData.pixelSize;
-
-        const imageCenter: pixelPosition = [
-          Math.floor(imageSize[0] / 2),
-          Math.floor(imageSize[1] / 2),
-        ];
-
-        const panelsInImage = Array<HMPanel>();
-
-        imageData.Predictions.forEach((prediction: PredictionJSON) => {
-          const gpsPredict = calculateGPSCoords(gpsPosition, pixelSize,
-              relativeAltitude, focalLength, prediction.center, imageCenter);
-          const panelId = randomBytes(16).toString("base64").slice(0, 16);
-
-          functions.logger.debug(loggerId + ":gps-position-calculated",
-              {panelData: {gpsPosition: gpsPredict,
-                panelCenter: prediction.center,
-                imageCenter: imageCenter,
-                faultType: prediction.label,
-                panelId: panelId}});
-
-          panelsInImage.push({
-            id: panelId,
-            location: gpsPredict,
-            faultType: prediction.label,
-            truePanel: true,
-          });
-        });
+      querySnapshot.forEach((imageDoc) => {
+        const image = imageDoc.data();
+        const panels = image.processHMPredictions(image.predictions);
+        allPanels.push(...panels);
       });
 
-      db.collection("inputQueue").doc(context.params.docId).delete();
-      return 0;
+      const filteredPanels = removeDuplicates(allPanels);
+
+      filteredPanels.forEach((panel) => {
+        RESULTS.doc(panel.id).withConverter(hmPanelConverter).set(panel);
+      });
+
+      functions.logger.info(loggerId + ":panels-processed",
+          {numberPanelsFound: allPanels.length,
+            numberPanelsRemoved: allPanels.length - filteredPanels.length});
+
+      return;
     });
 
 // export const checkForDupeFunction = functions.firestore
