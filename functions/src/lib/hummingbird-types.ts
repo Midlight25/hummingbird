@@ -7,20 +7,21 @@ export interface DroneImageJSON {
   metadata: MetadataJSON,
 }
 
-export interface PredictionJSON extends Prediction {
+export interface PredictionJSON {
   box: [
     topLeftX: number,
     topLeftY: number,
     botRightX: number,
     botRightY: number
   ],
+  center: [x: number, y: number]
   label: FailureLabel,
   label_id: number,
   score: number
 }
 
 
-enum FailureLabel {
+export enum FailureLabel {
     EDGE_HOTSPOT = "Edge Hotspot",
     LINEAR_HOTSPOT = "Linear Hotspot",
     MULTIPLE_CELL_HOTSPOT = "Multiple Cell Hotspot",

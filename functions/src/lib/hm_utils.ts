@@ -1,3 +1,4 @@
+import {DocumentData, QueryDocumentSnapshot} from "firebase-admin/firestore";
 import {CardinalDirection, DroneImageJSON, GPSLocaleDMS,
   HMPrediction, ImageRecord} from "./hummingbird-types";
 
@@ -22,15 +23,43 @@ export function convertImgJSON<T extends DroneImageJSON>(data: T): ImageRecord {
     longDD : -longDD;
 
   const predictions = data.Predictions.map((pred) => {
-    return new HMPrediction(pred.location, pred.label);
+    return new HMPrediction(pred.center, pred.label);
   });
 
   return new ImageRecord(
       [latDD, longDD],
       [data.metadata.Exif.PixelXDimension, data.metadata.Exif.PixelYDimension],
       predictions,
-      data.metadata.Exif.FocalLength[0] / data.metadata.Exif.FocalLength[1],
+      data.metadata.Exif.FocalLength[0] /
+      data.metadata.Exif.FocalLength[1] / 1000,
       0.000017,
       data.metadata.gimbal_data.RelativeAltitude
   );
 }
+
+export const imageRecordConverter = {
+  toFirestore: (Image: ImageRecord) => {
+    const predictions = Image.predictions.map((pred) => {
+      return {location: pred.location, label: pred.label};
+    });
+    return {
+      gpsPositionDD: Image.gpsPositionDD,
+      imageSize: Image.imageSize,
+      predictions: predictions,
+      focalLength: Image.focalLength,
+      pixelSize: Image.pixelSize,
+      relativeAltitude: Image.relativeAltitude,
+    };
+  },
+  fromFirestore: (snapshot: QueryDocumentSnapshot<DocumentData>) => {
+    const docData = snapshot.data();
+    const predictions: HMPrediction[] = docData.predictions.map(
+        (pred: HMPrediction) => {
+          return new HMPrediction(pred.location, pred.label);
+        });
+
+    return new ImageRecord(docData.gpsPositionDD, docData.imageSize,
+        predictions, docData.focalLength, docData.pixelSize,
+        docData.relativeAltitude);
+  },
+};

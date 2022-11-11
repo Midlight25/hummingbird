@@ -5,7 +5,7 @@ import * as functions from "firebase-functions";
 import {randomBytes} from "crypto";
 
 import {db} from "./admin";
-import {exifGPStoDecimalDegrees} from "./lib/hm_utils";
+import {convertImgJSON, imageRecordConverter} from "./lib/hm_utils";
 import {DroneImageJSON, ImageRecord} from "./lib/hummingbird-types";
 
 export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {
@@ -21,46 +21,23 @@ export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {
   functions.logger.info(loggerId + ":called");
 
   const batchId = randomBytes(21).toString("base64").slice(0, 21);
-
-  const batchData = req.body;
+  const rawData = req.body;
   const processedData: Array<ImageRecord> = [];
-  const queue = db.collection("inputQueue");
+  const processingQueue = db.collection("inputQueue");
 
-  for (const value of Object.values<DroneImageJSON>(batchData)) {
-    const latDMS = value.metadata.GPS.GPSLatitude;
-    const longDMS = value.metadata.GPS.GPSLongitude;
-
-    let latDD = exifGPStoDecimalDegrees(latDMS);
-    let longDD = exifGPStoDecimalDegrees(longDMS);
-
-    latDD = (value.metadata.GPS.GPSLatitudeRef === "S") ?
-      -1 * latDD : latDD;
-    longDD = (value.metadata.GPS.GPSLongitudeRef === "W") ?
-      -1 * longDD : longDD;
-
-    const imageData: ImageRecord = {
-      gpsPosition: [latDD, longDD],
-      pixelSize: 0.000017,
-      relativeAltitude: value.metadata.gimbal_data.RelativeAltitude,
-      focalLength: value.metadata.Exif.FocalLength[0] /
-        value.metadata.Exif.FocalLength[1],
-      Predictions: value.Predictions,
-      imageSize: [value.metadata.Exif.PixelXDimension,
-        value.metadata.Exif.PixelYDimension],
-    };
-
-    processedData.push(imageData);
+  for (const value of Object.values<DroneImageJSON>(rawData)) {
+    const image: ImageRecord = convertImgJSON<DroneImageJSON>(value);
+    processedData.push(image);
   }
 
   try {
-    const batchRecord = await queue.add({"batchID": batchId});
+    const batchRecord = await processingQueue.add({"batchID": batchId});
     const imgSubCollection = batchRecord.collection("images");
     for (const image of processedData) {
-      imgSubCollection.add(image);
+      imgSubCollection.withConverter(imageRecordConverter).add(image);
     }
   } catch (exception) {
-    functions.logger.error(loggerId + ":failed-to-create-batch-record",
-        {exception: exception});
+    functions.logger.error(loggerId + ":failed-to-create-batch-record");
   }
 
   functions.logger.debug(loggerId + ":batch-registered",
