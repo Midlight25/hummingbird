@@ -5,7 +5,7 @@ import * as functions from "firebase-functions";
 
 import {db} from "./admin";
 import {hmPanelConverter, imageRecordConverter} from "./lib/hm_utils";
-import {removeDuplicates} from "./lib/gis";
+import {removeDuplicates} from "./lib/drone_image_analyzer";
 import {HMPanel} from "./lib/hummingbird-types";
 
 const RESULTS = db.collection("panels");

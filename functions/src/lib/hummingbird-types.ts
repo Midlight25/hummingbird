@@ -1,4 +1,4 @@
-import {Image, gpsPositionDD, Panel, Prediction, pixelPosition} from "./gis";
+import {Image, gpsPositionDD, Panel, Prediction, pixelPosition} from "./drone_image_analyzer";
 import {randomBytes} from "crypto";
 
 export interface DroneImageJSON {
