@@ -30,10 +30,15 @@ export const queueFilledFunction = functions.firestore
         allPanels.push(...panels);
       });
 
+
       const filteredPanels = removeDuplicates(allPanels);
 
       filteredPanels.forEach((panel) => {
         RESULTS.doc(panel.id).withConverter(hmPanelConverter).set(panel);
+      });
+
+      functions.logger.debug(loggerId + ":all-panel-report", {
+        panels: filteredPanels,
       });
 
       functions.logger.info(loggerId + ":panels-processed",
