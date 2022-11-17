@@ -4,7 +4,7 @@
 import * as functions from "firebase-functions";
 
 import {db} from "./admin";
-import {hmPanelConverter, imageRecordConverter} from "./lib/hm_utils";
+import {hmPanelConverter, batchRecordConverter} from "./lib/hm_utils";
 import {removeDuplicates} from "./lib/drone_image_analyzer";
 import {HMPanel} from "./lib/hummingbird-types";
 
@@ -12,24 +12,20 @@ const RESULTS = db.collection("panels");
 
 export const queueFilledFunction = functions.firestore
     .document("inputQueue/{docId}")
-    .onCreate(async (snapshot) => {
+    .onCreate(async (snapshot, context) => {
       const loggerId = "submissionQueue";
 
-      const batchId: string = snapshot.id;
-      const documentRef = snapshot.ref;
-      const querySnapshot = await documentRef.collection("images")
-          .withConverter(imageRecordConverter).get();
+      const batchId: string = context.params.docId;
+      const batch = batchRecordConverter.fromFirestore(snapshot);
       const allPanels = new Array<HMPanel>();
 
       functions.logger.info(loggerId + ":called",
           {batchId: batchId});
 
-      querySnapshot.forEach((imageDoc) => {
-        const image = imageDoc.data();
+      batch.images.forEach((image) => {
         const panels = image.processHMPredictions(image.predictions);
         allPanels.push(...panels);
       });
-
 
       const filteredPanels = removeDuplicates(allPanels);
 
@@ -37,27 +33,14 @@ export const queueFilledFunction = functions.firestore
         RESULTS.doc(panel.id).withConverter(hmPanelConverter).set(panel);
       });
 
-      functions.logger.debug(loggerId + ":all-panel-report", {
-        panels: filteredPanels,
-      });
-
       functions.logger.info(loggerId + ":panels-processed",
-          {numberPanelsFound: allPanels.length,
-            numberPanelsRemoved: allPanels.length - filteredPanels.length});
+          {numberPanelsFoundTotal: allPanels.length,
+            numberPanelDuplicatesRemoved: allPanels.length -
+            filteredPanels.length,
+            numberPanelsSaved: filteredPanels.length,
+            batchId: batchId});
+
+      await snapshot.ref.update({processingDone: true});
 
       return;
     });
-
-// export const checkForDupeFunction = functions.firestore
-//     .document("panels/{panelID}")
-//     .onCreate((snapshot, context) => {
-//       functions.logger.info({event: "checkForDupe:called"},
-//           "New panel with ID",
-//           context.params.panelID,
-//           "has been saved to Firestore");
-//       // Check if panel isn't duplicate using threshold TBD
-//       functions.logger.warn({event: "checkForDupe:success"},
-//           "Removing Panel with ID",
-//           context.params.panelID,
-//           "Reason: Duplicate");
-//     });

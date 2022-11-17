@@ -39,7 +39,7 @@ export function convertImgJSON<T extends DroneImageJSON>(data: T): HMImage {
   );
 }
 
-export const batchRecorderConverter = {
+export const batchRecordConverter = {
   toFirestore: (batch: Batch) : BatchFirestoreRecord => {
     const imagesFrs: ImageFirestoreRecord[] = batch.images.map((image) => {
       const predictions: PredictionFirestoreRecord[] =
@@ -58,10 +58,10 @@ export const batchRecorderConverter = {
     });
     return {processingDone: batch.processingDone, images: imagesFrs};
   },
-  fromFirestore: (snapshot: QueryDocumentSnapshot<BatchFirestoreRecord>)
+  fromFirestore: (snapshot: QueryDocumentSnapshot<DocumentData>)
   : Batch => {
     const batchRec = snapshot.data();
-    const images = batchRec.images
+    const images: HMImage[] = batchRec.images
         .map((image: ImageFirestoreRecord) => {
           const predictions = image.predictions.map((pred) => {
             return new HMPrediction(pred.location, pred.label);
@@ -114,7 +114,7 @@ export const hmPanelConverter = {
       truePanel: panel.truePanel,
     };
   },
-  fromFirestore: (snapshot: QueryDocumentSnapshot<PanelFirestoreRecord>) => {
+  fromFirestore: (snapshot: QueryDocumentSnapshot<DocumentData>) => {
     const docData = snapshot.data();
     return new HMPanel(docData.gpsPositionDD, docData.faultType,
         docData.truePanel, snapshot.id);

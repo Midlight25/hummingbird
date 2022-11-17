@@ -4,7 +4,7 @@
 import * as functions from "firebase-functions";
 
 import {db} from "./admin";
-import {batchRecorderConverter, convertImgJSON} from "./lib/hm_utils";
+import {batchRecordConverter, convertImgJSON} from "./lib/hm_utils";
 import {DroneImageJSON, HMImage} from "./lib/hummingbird-types";
 
 export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {
@@ -30,7 +30,7 @@ export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {
 
   try {
     const batchRecord = await processingQueue
-        .withConverter(batchRecorderConverter)
+        .withConverter(batchRecordConverter)
         .add({processingDone: false, images: processedData});
     // const imgSubCollection = batchRecord.collection("images");
     // for (const image of processedData) {
