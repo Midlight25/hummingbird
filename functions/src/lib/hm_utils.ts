@@ -1,7 +1,8 @@
 import {DocumentData, QueryDocumentSnapshot} from "firebase-admin/firestore";
-import {CardinalDirection, DroneImageJSON, GPSLocaleDMS,
-  HMPanel,
-  HMPrediction, ImageRecord} from "./hummingbird-types";
+import {BatchFirestoreRecord, CardinalDirection, DroneImageJSON, GPSLocaleDMS,
+  HMPanel, HMPrediction, ImageFirestoreRecord, HMImage,
+  PredictionFirestoreRecord, PanelFirestoreRecord, Batch}
+  from "./hummingbird-types";
 
 export function exifGPStoDecimalDegrees(heading: GPSLocaleDMS): number {
   const degrees = heading[0][0] / heading[0][1];
@@ -11,7 +12,7 @@ export function exifGPStoDecimalDegrees(heading: GPSLocaleDMS): number {
   return degrees + (minutes / 60) + (seconds / 3600);
 }
 
-export function convertImgJSON<T extends DroneImageJSON>(data: T): ImageRecord {
+export function convertImgJSON<T extends DroneImageJSON>(data: T): HMImage {
   const latDMS = data.metadata.GPS.GPSLatitude;
   const longDMS = data.metadata.GPS.GPSLongitude;
 
@@ -27,7 +28,7 @@ export function convertImgJSON<T extends DroneImageJSON>(data: T): ImageRecord {
     return new HMPrediction(pred.center, pred.label);
   });
 
-  return new ImageRecord(
+  return new HMImage(
       [latDD, longDD],
       [data.metadata.Exif.PixelXDimension, data.metadata.Exif.PixelYDimension],
       predictions,
@@ -38,8 +39,48 @@ export function convertImgJSON<T extends DroneImageJSON>(data: T): ImageRecord {
   );
 }
 
+export const batchRecorderConverter = {
+  toFirestore: (batch: Batch) : BatchFirestoreRecord => {
+    const imagesFrs: ImageFirestoreRecord[] = batch.images.map((image) => {
+      const predictions: PredictionFirestoreRecord[] =
+        image.predictions.map((pred) => {
+          return {location: pred.location, label: pred.label};
+        });
+      return {
+        gpsPositionDD: image.gpsPositionDD,
+        imageSize: image.imageSize,
+        predictions: predictions,
+        focalLength: image.focalLength,
+        pixelSize: image.pixelSize,
+        relativeAltitude: image.relativeAltitude,
+
+      };
+    });
+    return {processingDone: batch.processingDone, images: imagesFrs};
+  },
+  fromFirestore: (snapshot: QueryDocumentSnapshot<BatchFirestoreRecord>)
+  : Batch => {
+    const batchRec = snapshot.data();
+    const images = batchRec.images
+        .map((image: ImageFirestoreRecord) => {
+          const predictions = image.predictions.map((pred) => {
+            return new HMPrediction(pred.location, pred.label);
+          });
+          return new HMImage(
+              image.gpsPositionDD,
+              image.imageSize,
+              predictions,
+              image.focalLength,
+              image.pixelSize,
+              image.relativeAltitude,
+          );
+        });
+    return {processingDone: batchRec.processingDone, images: images};
+  },
+};
+
 export const imageRecordConverter = {
-  toFirestore: (Image: ImageRecord) => {
+  toFirestore: (Image: HMImage) => {
     const predictions = Image.predictions.map((pred) => {
       return {location: pred.location, label: pred.label};
     });
@@ -59,21 +100,21 @@ export const imageRecordConverter = {
           return new HMPrediction(pred.location, pred.label);
         });
 
-    return new ImageRecord(docData.gpsPositionDD, docData.imageSize,
+    return new HMImage(docData.gpsPositionDD, docData.imageSize,
         predictions, docData.focalLength, docData.pixelSize,
         docData.relativeAltitude);
   },
 };
 
 export const hmPanelConverter = {
-  toFirestore: (panel: HMPanel) => {
+  toFirestore: (panel: HMPanel): PanelFirestoreRecord => {
     return {
       faultType: panel.faultType,
       gpsPositionDD: panel.gpsPositionDD,
       truePanel: panel.truePanel,
     };
   },
-  fromFirestore: (snapshot: QueryDocumentSnapshot<DocumentData>) => {
+  fromFirestore: (snapshot: QueryDocumentSnapshot<PanelFirestoreRecord>) => {
     const docData = snapshot.data();
     return new HMPanel(docData.gpsPositionDD, docData.faultType,
         docData.truePanel, snapshot.id);

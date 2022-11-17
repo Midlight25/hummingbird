@@ -1,4 +1,5 @@
-import {Image, gpsPositionDD, Panel, Prediction, pixelPosition} from "./drone_image_analyzer";
+import {Image, gpsPositionDD, Panel, Prediction, pixelPosition}
+  from "./drone_image_analyzer";
 import {randomBytes} from "crypto";
 
 export interface DroneImageJSON {
@@ -89,7 +90,7 @@ export enum CardinalDirection {
   WEST = "W",
 }
 
-export class ImageRecord extends Image {
+export class HMImage extends Image {
   predictions: Array<HMPrediction>;
 
   constructor(gpsPositionDD: gpsPositionDD, imageSize: [x: number, y: number],
@@ -135,8 +136,37 @@ export class HMPrediction implements Prediction {
   }
 }
 
+export interface Batch {
+  // Whether or not this batch has been calculated and can thus be discarded
+  processingDone: boolean,
+  images: HMImage[],
+}
+
 export type GPSLocaleDMS = [
   [degrees: number, significance: number],
   [minutes: number, significance: number],
   [seconds: number, significance: number]
 ];
+
+export interface BatchFirestoreRecord {
+  processingDone: boolean,
+  images: ImageFirestoreRecord[],
+}
+
+export interface ImageFirestoreRecord {
+  predictions: PredictionFirestoreRecord[],
+  gpsPositionDD: gpsPositionDD,
+  imageSize: [x: number, y: number],
+  focalLength: number,
+  pixelSize: number,
+  relativeAltitude: number,
+
+}
+
+export interface PredictionFirestoreRecord extends Prediction {
+  label: FailureLabel
+}
+
+export interface PanelFirestoreRecord extends Panel {
+  faultType: FailureLabel,
+}
