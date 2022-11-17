@@ -79,33 +79,6 @@ export const batchRecordConverter = {
   },
 };
 
-export const imageRecordConverter = {
-  toFirestore: (Image: HMImage) => {
-    const predictions = Image.predictions.map((pred) => {
-      return {location: pred.location, label: pred.label};
-    });
-    return {
-      gpsPositionDD: Image.gpsPositionDD,
-      imageSize: Image.imageSize,
-      predictions: predictions,
-      focalLength: Image.focalLength,
-      pixelSize: Image.pixelSize,
-      relativeAltitude: Image.relativeAltitude,
-    };
-  },
-  fromFirestore: (snapshot: QueryDocumentSnapshot<DocumentData>) => {
-    const docData = snapshot.data();
-    const predictions: HMPrediction[] = docData.predictions.map(
-        (pred: HMPrediction) => {
-          return new HMPrediction(pred.location, pred.label);
-        });
-
-    return new HMImage(docData.gpsPositionDD, docData.imageSize,
-        predictions, docData.focalLength, docData.pixelSize,
-        docData.relativeAltitude);
-  },
-};
-
 export const hmPanelConverter = {
   toFirestore: (panel: HMPanel): PanelFirestoreRecord => {
     return {
