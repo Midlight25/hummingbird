@@ -1,42 +1,229 @@
-.App {
+
+
+h1{
+  color: orange;
+  font-size:50px;
+  font-weight: 500;
   text-align: center;
+  padding: 1rem 6rem;
+ 
+}
+h2{
+  color:orange;
+  font-size:30px;
+  text-align: center;
+  font-weight: 500;
+ 
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+h3{
+    color:orange;
+    font-size:20px;
+    text-align: initial;
+    font-weight: 500;
+
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+  background-color: white;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+
+body{
+    font-family: 'Rubik', sans-serif;
+    margin: 0%;
+    display: grid;
+}
+
+
+.App{
+    display: flex;
+    text-align: center;
+    background-color: white;
+}
+
+.about{
+    align-items: center;
+    display:inline-flex;
+}
+
+
+.sidebar{
+    width:200px;
+    background-color: #ff910a;
+    color: white;
+    padding-top:200px;
+    padding-left:20px;
+    height:100vh;
+    
+}
+.sidebar__items{
+    display: flex;
+    flex-direction: column;
+
+}
+.sidebar__items a{
+    color: white;
+    font-size:20px;
+    margin-bottom:40px;
+    box-shadow: black;
+    text-decoration: none;
+}
+.sidebar_active{
+    text-decoration: underline!important;
+}
+.tab-nav{
+ margin-top:70px;
+ margin-bottom:60px;   
+}
+.tab-nav a{    
+    color:#A2A2A2;
+    font-size:20px;
+    font-weight: 500;
+    padding:20px;
+    text-decoration: none;
+}
+
+.inner-content{
+    padding-top:70px;
+    padding-left:40px;
+}
+
+.main-footer {
+    color: white;
+    background-color: #ff910a;
+    padding: 0.1rem;
+    text-align: center;
+    position:fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    outline:auto;
   }
+
+.about{
+    display: block;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+
+/*** Chart ***/
+
+
+
+/***    Register Page     ***/
+#checkbox {
+    width: 1rem
 }
 
-.App-link {
-  color: #61dafb;
+form span {
+    font-size: .8rem
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+#reset_pass_lbl {
+    float: left
 }
 
-button {
-  font-size: calc(10px + 2vmin);
+
+/***    Login Page     ***/
+h2 {
+    font-weight: 300
 }
+
+form {
+    display: inline-block;
+    background: rgb(255, 247, 0);
+    border: 1px solid rgb(255, 146, 3);
+    border-radius: 5px;
+    padding: 2rem;
+    margin: 2rem 0 1rem 0;
+  
+}
+
+form label {
+    float: left;
+    font-size: .9rem;
+    margin: 0;
+    padding: 0
+}
+
+.right-label {
+    float: right;
+    cursor: pointer
+}
+
+input {
+    width: 15rem;
+    padding: .3rem;
+    border-radius: 5px;
+    outline: none;
+    border: none
+}
+
+#sub_btn {
+    display: block;
+    width: 100%;
+    padding: .3rem;
+    border: none;
+    background: orange;
+    color: yellow;
+    border-radius: 3px;
+}
+
+#sub_btn:hover {
+    background: orange;
+    transition: all .5s
+}
+
+circle{
+    color: #ff910a;
+}
+
+footer p {
+    margin: 0;
+    font-size: .9rem
+}
+
+
+.form-row{
+    display: flex;
+    margin-top:40px;
+    align-items: flex-end;
+    margin-bottom:40px;
+}
+.dynamic-form button {
+   padding:10px 10px;
+   max-height: 40px;
+}
+
+
+.input-group input{     
+      padding:10px 10px;
+      margin-top:10px;
+      
+}
+.form-row button {
+   padding:10px 10px;
+   max-height: 40px;
+}
+
