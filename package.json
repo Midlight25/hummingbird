@@ -7,8 +7,8 @@
   "scripts": {
     "fire-all-engines": "npm run check && npm run all:build && npm run dev:emulators:all",
     "dev": "vite",
-    "dev:emulators": "firebase emulators:start --only auth,functions,firestore,pubsub,storage",
-    "dev:emulators:all": "firebase emulators:start",
+    "dev:emulators": "firebase emulators:start --only auth,functions,firestore,pubsub,storage --import=./test_data",
+    "dev:emulators:all": "firebase emulators:start --import=./test_data",
     "build": "vite build --mode dev",
     "build:prod": "vite build --mode production",
     "check": "npm run type-check && npm run lint",

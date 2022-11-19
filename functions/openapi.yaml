@@ -6,7 +6,14 @@ info:
 paths:
   /registerBatch:
     post:
+      summary: Register images for processing
       description: Upload a batch of solar panels as a JSON object to be processed by the system. Receive a batch id in return.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Images"
       responses:
         200:
           description: Batch upload successful.
@@ -14,3 +21,86 @@ paths:
           description: Request was malformed (no API key was not supplied or request was not sent as JSON.)
         401:
           description: API key is not valid.
+
+components:
+  schemas:
+    Images:
+      title: Collection of Images
+      type: array
+      items:
+        $ref: "#/components/schemas/Image"
+    Image:
+      title: An image representation
+      type: object
+      properties:
+        Predictions:
+          title: Array of Predictions
+          type: array
+          items:
+            $ref: "#/components/schemas/Prediction"
+        metadata:
+          $ref: "#/components/schemas/metadata"
+    Prediction:
+      title: A representation of a panel identification prediction
+      type: object
+      properties:
+        center:
+          description: The center point of the prediction bounding box as [x, y].
+          type: array
+          items:
+            type: number
+    metadata:
+      title: Image Metadata Container
+      description: Metadata of image, needs to contain Exif information and Gimbal Data
+      type: object
+      properties:
+        Exif:
+          title: EXIF Metadata of image
+          type: object
+          properties:
+            FocalLength:
+              description: A two item array for focal length [value, significance].
+              type: array
+              items:
+                type: number
+            PixelXDimension:
+              description: The dimension of the image taken on the X-axis.
+              type: number
+            PixelYDimension:
+              description: The dimension of the image taken on the Y-axis.
+              type: number
+        GPS:
+          title: GPS Metadata Container
+          type: object
+          properties:
+            GPSLatitudeRef:
+              description: Single letter designation for pos/neg direction. "N" or "S"
+              type: string
+            GPSLatitude:
+              description: 2D array for DMS designation
+              type: array
+              items:
+                description: Overall Container for sub arrays, [degrees, minutes, seconds]
+                type: array
+                items:
+                  description: Inner array values [value, significance]
+                  type: number
+            GPSLongitudeRef:
+              description: Single letter designation for pos/neg direction. "W" or "E"
+              type: string
+            GPSLongitude:
+              description: 2D array for DMS designation
+              type: array
+              items:
+                description: Overall Container for sub arrays, [degrees, minutes, seconds]
+                type: array
+                items:
+                  description: Inner array values [value, significance]
+                  type: number
+        gimbal_data:
+          title: Gimbal Data from the Drone
+          type: object
+          properties:
+            RelativeAltitude:
+              title: Relative altitude reading
+              type: number

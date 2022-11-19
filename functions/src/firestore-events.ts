@@ -4,36 +4,43 @@
 import * as functions from "firebase-functions";
 
 import {db} from "./admin";
-import {getRandomInRange} from "./lib/generator";
+import {hmPanelConverter, batchRecordConverter} from "./lib/hm_utils";
+import {removeDuplicates} from "./lib/drone_image_analyzer";
+import {HMPanel} from "./lib/hummingbird-types";
 
-const results = db.collection("panels");
+const RESULTS = db.collection("panels");
 
 export const queueFilledFunction = functions.firestore
     .document("inputQueue/{docId}")
-    .onCreate((snapshot, context) => {
-      functions.logger.info({event: "submissionQueue:called"},
-          "File uploaded to processing queue with ID", context.params.docId);
+    .onCreate(async (snapshot, context) => {
+      const loggerId = "submissionQueue";
 
-      const lat = getRandomInRange(-180, 180, 3);
-      const long = getRandomInRange(-180, 180, 3);
-      const panelId: string = context.params.docId;
+      const batchId: string = context.params.docId;
+      const batch = batchRecordConverter.fromFirestore(snapshot);
+      const allPanels = new Array<HMPanel>();
 
-      results.add({lat: lat, long: long, panelId: panelId});
+      functions.logger.info(loggerId + ":called",
+          {batchId: batchId});
 
-      db.collection("inputQueue").doc(context.params.docId).delete();
+      batch.images.forEach((image) => {
+        const panels = image.processHMPredictions(image.predictions);
+        allPanels.push(...panels);
+      });
+
+      const filteredPanels = removeDuplicates(allPanels);
+
+      filteredPanels.forEach((panel) => {
+        RESULTS.doc(panel.id).withConverter(hmPanelConverter).set(panel);
+      });
+
+      functions.logger.info(loggerId + ":panels-processed",
+          {numberPanelsFoundTotal: allPanels.length,
+            numberPanelDuplicatesRemoved: allPanels.length -
+            filteredPanels.length,
+            numberPanelsSaved: filteredPanels.length,
+            batchId: batchId});
+
+      await snapshot.ref.update({processingDone: true});
+
       return;
-    });
-
-export const checkForDupeFunction = functions.firestore
-    .document("panels/{panelID}")
-    .onCreate((snapshot, context) => {
-      functions.logger.info({event: "checkForDupe:called"},
-          "New panel with ID",
-          context.params.panelID,
-          "has been saved to Firestore");
-      // Check if panel isn't duplicate using threshold TBD
-      functions.logger.warn({event: "checkForDupe:success"},
-          "Removing Panel with ID",
-          context.params.panelID,
-          "Reason: Duplicate");
     });

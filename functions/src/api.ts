@@ -4,11 +4,10 @@
 import * as functions from "firebase-functions";
 
 import {db} from "./admin";
-import {DroneImageData} from "./lib/types";
-import {checkAuth} from "./lib/auth";
+import {batchRecordConverter, convertImgJSON} from "./lib/hm_utils";
+import {DroneImageJSON, HMImage} from "./lib/hummingbird-types";
 
-
-export const registerBatchFunction = functions.https.onRequest((req, res) => {
+export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {
   const loggerId = "registerBatch";
 
   if (req.get("content-type") !== "application/json") {
@@ -18,37 +17,33 @@ export const registerBatchFunction = functions.https.onRequest((req, res) => {
     return;
   }
 
-  const key = req.get("access-key");
-
-  if (!key) {
-    functions.logger.error(loggerId + ":no-key-supplied");
-    res.sendStatus(400);
-    return;
-  }
-
-  if (!checkAuth(key)) {
-    functions.logger.error(loggerId + ":unauthorized-attempt");
-    res.sendStatus(401);
-    return;
-  }
-
   functions.logger.info(loggerId + ":called");
 
-  const batchData = req.body;
-  const processedData: Array<DroneImageData> = [];
-  const queue = db.collection("inputQueue");
+  const rawData = req.body;
+  const processedData: Array<HMImage> = [];
+  const processingQueue = db.collection("inputQueue");
 
-  functions.logger.debug(loggerId + ":report-json", {data: batchData});
-
-
-  for (const value of Object.values(batchData)) {
-    // @ts-ignore
-    processedData.push(value);
+  for (const value of Object.values<DroneImageJSON>(rawData)) {
+    const image: HMImage = convertImgJSON<DroneImageJSON>(value);
+    processedData.push(image);
   }
 
-  functions.logger.debug("Number of images registered: ",
-      processedData.length);
+  try {
+    const batchRecord = await processingQueue
+        .withConverter(batchRecordConverter)
+        .add({processingDone: false, images: processedData});
+    // const imgSubCollection = batchRecord.collection("images");
+    // for (const image of processedData) {
+    //   imgSubCollection.withConverter(imageRecordConverter).add(image);
+    // }
 
-  res.sendStatus(200);
+    functions.logger.debug(loggerId + ":batch-registered",
+        {batchID: batchRecord.id, numImagesRegistered: processedData.length});
+    res.json({"batchID": batchRecord.id});
+  } catch (exception) {
+    functions.logger.error(loggerId + ":failed-to-create-batch-record");
+    res.sendStatus(500);
+  }
+
   return;
 });
