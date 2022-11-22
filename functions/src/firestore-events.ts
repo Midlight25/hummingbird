@@ -23,7 +23,7 @@ export const queueFilledFunction = functions.firestore
           {batchId: batchId});
 
       batch.images.forEach((image) => {
-        const panels = image.processHMPredictions(image.predictions);
+        const panels = image.processHMPredictions(image.predictions, batchId);
         allPanels.push(...panels);
       });
 
