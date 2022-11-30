@@ -9,6 +9,7 @@ import {removeDuplicates} from "./lib/drone_image_analyzer";
 import {HMPanel} from "./lib/hummingbird-types";
 
 const RESULTS = db.collection("panels");
+const DUPES = db.collection("duplicates");
 
 export const queueFilledFunction = functions.firestore
     .document("inputQueue/{docId}")
@@ -28,15 +29,19 @@ export const queueFilledFunction = functions.firestore
       });
 
       const filteredPanels = removeDuplicates(allPanels);
+      const duplicatePanels = allPanels.filter(
+          (i) => !filteredPanels.includes(i));
 
       filteredPanels.forEach((panel) => {
         RESULTS.doc(panel.id).withConverter(hmPanelConverter).set(panel);
       });
+      duplicatePanels.forEach((panel) => {
+        DUPES.doc(panel.id).withConverter(hmPanelConverter).set(panel);
+      });
 
       functions.logger.info(loggerId + ":panels-processed",
           {numberPanelsFoundTotal: allPanels.length,
-            numberPanelDuplicatesRemoved: allPanels.length -
-            filteredPanels.length,
+            numberPanelDuplicatesRemoved: duplicatePanels.length,
             numberPanelsSaved: filteredPanels.length,
             batchId: batchId});
 
