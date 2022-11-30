@@ -4,8 +4,9 @@
 import * as functions from "firebase-functions";
 
 import {db} from "./admin";
-import {batchRecordConverter, convertImgJSON} from "./lib/hm_utils";
-import {DroneImageJSON, HMImage} from "./lib/hummingbird-types";
+import {batchRecordConverter, convertImgJSON,
+  hmPanelConverter} from "./lib/hm_utils";
+import {DroneImageJSON, HMImage, HMPanel} from "./lib/hummingbird-types";
 
 export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {
   const loggerId = "registerBatch";
@@ -47,3 +48,38 @@ export const registerBatchFunc = functions.https.onRequest(async (req, res)=> {
 
   return;
 });
+
+export const getBatchResultsFunc = functions.https.onRequest(
+    async (req, res) => {
+      const loggerId = "getBatchResults";
+      const batchId = req.query.batchId;
+      const panels = new Array<HMPanel>();
+
+
+      try {
+        const panelRecords = await db.collection("panels")
+            .where("batchId", "==", batchId)
+            .withConverter(hmPanelConverter)
+            .get();
+
+        panelRecords.forEach((document) => {
+          panels.push(document.data());
+        // const panel = document.data();
+        // panels.push(panel);
+        });
+
+        functions.logger.info(loggerId + ":called",
+            {batchIdRequested: batchId,
+              numPanelSent: panels.length});
+
+        if (panels.length > 0) {
+          res.json(panels);
+        } else {
+          res.sendStatus(404);
+        }
+      } catch (error) {
+        functions.logger.error(loggerId + ":unexpected-error",
+            {error: error});
+        res.sendStatus(500);
+      }
+    });

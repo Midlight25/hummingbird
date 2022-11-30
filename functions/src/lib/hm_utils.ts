@@ -85,11 +85,12 @@ export const hmPanelConverter = {
       faultType: panel.faultType,
       gpsPositionDD: panel.gpsPositionDD,
       truePanel: panel.truePanel,
+      batchId: panel.batchId,
     };
   },
   fromFirestore: (snapshot: QueryDocumentSnapshot<DocumentData>) => {
     const docData = snapshot.data();
     return new HMPanel(docData.gpsPositionDD, docData.faultType,
-        docData.truePanel, snapshot.id);
+        docData.truePanel, docData.batchId, snapshot.id);
   },
 };

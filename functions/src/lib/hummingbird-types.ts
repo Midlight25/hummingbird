@@ -100,11 +100,12 @@ export class HMImage extends Image {
     this.predictions = predictions;
   }
 
-  processHMPredictions<T extends HMPrediction>(predictions: T[]): HMPanel[] {
+  processHMPredictions<T extends HMPrediction>(
+      predictions: T[], batchId: string): HMPanel[] {
     const panels = super.processPredictions(predictions);
     const hmPanels = panels.map((panel, index) => {
       return new HMPanel(panel.gpsPositionDD, predictions[index].label,
-          panel.truePanel);
+          panel.truePanel, batchId);
     });
     return hmPanels;
   }
@@ -115,13 +116,15 @@ export class HMPanel implements Panel {
   faultType: FailureLabel;
   gpsPositionDD: gpsPositionDD;
   truePanel: boolean;
+  batchId: string;
 
-  constructor( gpsPositionDD: gpsPositionDD, faultType: FailureLabel,
-      truePanel = false, id = "") {
+  constructor(gpsPositionDD: gpsPositionDD, faultType: FailureLabel,
+      truePanel = false, batchId = "", id = "") {
     this.faultType = faultType;
     this.gpsPositionDD = gpsPositionDD;
     this.truePanel = truePanel;
     this.id = id ? id : randomBytes(16).toString("hex").slice(0, 16);
+    this.batchId = batchId;
   }
 }
 
@@ -169,4 +172,5 @@ export interface PredictionFirestoreRecord extends Prediction {
 
 export interface PanelFirestoreRecord extends Panel {
   faultType: FailureLabel,
+  batchId: string,
 }
